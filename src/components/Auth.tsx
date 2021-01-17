@@ -23,7 +23,17 @@ import CameraIcon from "@material-ui/icons/Camera";
 import EmailIcon from "@material-ui/icons/Email";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import AccountCircleIcon from "@material-ui/icons/AccountCircle";
-import { SubjectSharp } from '@material-ui/icons';
+
+function getModalStyle () {
+  const top = 50;
+  const left = 50;
+
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    transform: `translate(-${top}%, -${left}%)`,
+  };
+}
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -54,15 +64,40 @@ const useStyles = makeStyles((theme) => ({
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
+  modal: {
+    outline: "none",
+    position: "absolute",
+    width: 400,
+    borderRadius: 10,
+    backgroundColor: "white",
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(10),
+  }
 }));
 
 const Auth: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [avatarImage, setAvatarImage] = useState<File | null>(null);
-  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [openModal, setOpenModal] = React.useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+
+  const sendResetEmail = async (e: React.MouseEvent<HTMLElement>) => {
+    await auth
+      .sendPasswordResetEmail(resetEmail)
+      .then(() => {
+        setOpenModal(false);
+        setResetEmail('');
+      })
+      .catch((err) => {
+        alert(err.message);
+        setResetEmail('');
+      })
+  };
 
   const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files![0]) {
@@ -70,8 +105,6 @@ const Auth: React.FC = () => {
       e.target.value = '';
     }
   };
-
-  const [isLogin, setIsLogin] = useState(true);
 
   const signInEmail = async () => {
     await auth.signInWithEmailAndPassword(email, password);
@@ -104,7 +137,7 @@ const Auth: React.FC = () => {
         photoUrl: url,
       })
     );
-}
+  };
 
   return (
     <Grid container component="main" className={classes.root}>
@@ -120,18 +153,18 @@ const Auth: React.FC = () => {
           </Typography>
           <form className={classes.form} noValidate>
             {!isLogin && (<>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              name="username"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{setUsername(e.target.value)}}
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setUsername(e.target.value) }}
               />
               <Box textAlign="center">
                 <IconButton>
@@ -164,7 +197,7 @@ const Auth: React.FC = () => {
               autoComplete="email"
               autoFocus
               value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{setEmail(e.target.value)}}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setEmail(e.target.value) }}
             />
             <TextField
               variant="outlined"
@@ -177,7 +210,7 @@ const Auth: React.FC = () => {
               id="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>)=>{setPassword(e.target.value)}}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPassword(e.target.value) }}
             />
             <Button
               disabled={
@@ -197,7 +230,7 @@ const Auth: React.FC = () => {
                       await signInEmail();
                     } catch (err) {
                       alert(err.message);
-                  }
+                    }
                   } : async () => {
                     try {
                       await signUpEmail();
@@ -211,10 +244,10 @@ const Auth: React.FC = () => {
             </Button>
             <Grid container>
               <Grid item xs>
-                <span className={styles.login_reset}>Forgot password?</span>
+                <span className={styles.login_reset} onClick={() => { setOpenModal(true) }}>Forgot password?</span>
               </Grid>
               <Grid item>
-                <span className={styles.login_toggleMode} onClick={() => { setIsLogin(!isLogin) }}>
+                <span className={styles.login_toggleMode} onClick={() => setIsLogin(!isLogin)}>
                   {isLogin ? 'Create new account ?' : 'Back to Login'}
                 </span>
               </Grid>
@@ -223,16 +256,38 @@ const Auth: React.FC = () => {
               fullWidth
               variant="contained"
               color="primary"
+              startIcon={<CameraIcon />}
               className={classes.submit}
               onClick={signInGoogle}
             >
               SignIn with Google
             </Button>
           </form>
+          <Modal open={openModal} onClose={() => setOpenModal(false)}>
+            <div style={getModalStyle()} className={classes.modal}>
+              <div className={styles.login_modal}>
+                <TextField
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  type="email"
+                  name="email"
+                  label="Reset E-mail"
+                  value={resetEmail}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setResetEmail(e.target.value);
+                  }}
+                />
+                <IconButton onClick={sendResetEmail}>
+                  <SendIcon />
+                </IconButton>
+              </div>
+            </div>
+          </Modal>
         </div>
       </Grid>
     </Grid>
   );
-}
+};
 
 export default Auth;
