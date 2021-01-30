@@ -71,6 +71,7 @@ function TweetInput() {
         }
         setTweetImage(null);
         setTweetMsg("");
+        setFileUrl("");
     };
 
     return (
