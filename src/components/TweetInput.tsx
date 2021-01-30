@@ -11,9 +11,14 @@ function TweetInput() {
     const user = useSelector(selectUser);
     const [tweetImage, setTweetImage] = useState<File | null>(null);
     const [tweetMsg, setTweetMsg] = useState("");
+    const [fileUrl, setFileUrl] = useState("");
 
     const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files![0]) {
+            const imageFile = e.target.files![0];
+            const imageUrl = URL.createObjectURL(imageFile);
+            setFileUrl(imageUrl);
+
             setTweetImage(e.target.files![0]);
             e.target.value = "";
         }
@@ -100,9 +105,13 @@ function TweetInput() {
                                 className={styles.tweet_hiddenIcon}
                                 type='file'
                                 onChange={onChangeImageHandler}
+                                accept='image/*'
                             />
                         </label>
                     </IconButton>
+                </div>
+                <div className={styles.preview}>
+                    <img src={fileUrl}></img>
                 </div>
 
                 <Button
@@ -117,6 +126,7 @@ function TweetInput() {
                     Tweet
                 </Button>
             </form>
+            <hr></hr>
         </>
     );
 }
